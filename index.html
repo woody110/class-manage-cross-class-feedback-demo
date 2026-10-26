@@ -1,0 +1,1445 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>一站式工作台 · 课后练习</title>
+  <link rel="stylesheet" href="assets/css/index.css">
+  <link rel="stylesheet" href="assets/css/theme/index.css">
+  <style>
+    :root {
+      --brand: #ff5f2e;
+      --text: #333;
+      --text-secondary: #606266;
+      --text-muted: #909399;
+      --line: #e4e7ed;
+      --line-light: #f1f1f1;
+      --page-bg: #f5f5fa;
+      --warning: #e6a23c;
+      --primary: #409eff;
+    }
+
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    html, body { min-width: 1180px; min-height: 100%; background: var(--page-bg); }
+    body { color: var(--text); font-size: 14px; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid rgba(255,95,46,.35); outline-offset: 1px; }
+
+    /* 真实系统外壳：60px 顶栏 + 200px 左侧菜单 */
+    .layout-header-content {
+      position: fixed;
+      z-index: 101;
+      inset: 0 0 auto 0;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      padding: 0 16px 0 0;
+      background: #fff;
+    }
+    .header-content { flex: 1; display: flex; align-items: center; }
+    .logo-box { height: 60px; min-width: 60px; margin-left: 16px; display: flex; align-items: center; }
+    .logo-box img { display: block; height: 34px; }
+    .handle-icon { display: flex; align-items: center; margin-left: 26px; cursor: pointer; }
+    .handle-icon img { width: 18px; height: 18px; }
+    .lingxi-ai-icon { display: flex; align-items: center; margin-left: 10px; }
+    .lingxi-ai-icon img { width: 36px; height: 36px; }
+    .header-user-avatar {
+      width: 48px;
+      height: 48px;
+      margin-right: 18px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: #fff;
+      background: var(--brand);
+      font-size: 14px;
+    }
+    .header-user-name { color: #41414d; font-size: 14px; }
+
+    .sc_menu {
+      position: fixed;
+      z-index: 100;
+      top: 60px;
+      bottom: 0;
+      left: 0;
+      width: 200px;
+      overflow: auto;
+      background: #fff;
+    }
+    .menu-group-title {
+      height: 48px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 20px;
+      color: #41414d;
+      font-size: 14px;
+    }
+    .menu-group-title img { width: 18px; height: 18px; }
+    .menu-item {
+      height: 48px;
+      display: flex;
+      align-items: center;
+      padding: 0 24px 0 45px;
+      color: #606266;
+      font-size: 13px;
+    }
+    .menu-item.is-active {
+      color: var(--brand);
+      background: #f8f8fa url("assets/img/menu-active.svg") no-repeat;
+    }
+
+    .router-view-content {
+      min-height: 100%;
+      padding-top: 112px;
+      padding-left: 200px;
+    }
+    .router-view-container {
+      min-height: calc(100vh - 112px);
+      padding: 0 23px 22px;
+      background: var(--page-bg);
+    }
+
+    /* 一站式工作台固定页签 */
+    .header-row {
+      position: fixed;
+      z-index: 99;
+      top: 60px;
+      right: 0;
+      left: 205px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 52px;
+      padding: 0 23px 2px 33px;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+    }
+    .tabs-col { flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+    .tabs-col::-webkit-scrollbar { display: none; }
+    .demo-tabs-nav { position: relative; display: flex; align-items: center; height: 50px; white-space: nowrap; }
+    .demo-tab {
+      height: 50px;
+      display: flex;
+      align-items: center;
+      margin-right: 26px;
+      color: #606266;
+      font-size: 14px;
+    }
+    .demo-tab.is-active { color: #303133; font-weight: 500; }
+    .demo-tab.is-active::after {
+      position: absolute;
+      bottom: 0;
+      height: 2px;
+      width: 48px;
+      border-radius: 2px;
+      background: var(--brand);
+      content: "";
+    }
+    .filter-col { flex-shrink: 0; display: flex; align-items: center; gap: 18px; padding-right: 20px; }
+    .filter-trigger {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 12px;
+      border-radius: 4px;
+      color: #606266;
+      background: #f5f7fa;
+      font-size: 14px;
+    }
+    .filter-trigger:hover { background: #e6e8eb; }
+    .filter-icon { color: var(--brand); font-size: 16px; }
+    .setting-icon { color: #909399; font-size: 18px; }
+
+    .header-filter-popover {
+      position: fixed;
+      z-index: 110;
+      top: 104px;
+      right: 72px;
+      width: 400px;
+      padding: 16px !important;
+      border: 1px solid #ebeef5;
+      border-radius: 4px;
+      background: #fff;
+      box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);
+    }
+    .filter-panel-item { display: flex; align-items: center; margin-bottom: 16px; }
+    .filter-panel-item:last-child { margin-bottom: 0; }
+    .filter-panel-label { flex: 0 0 50px; margin-right: 8px; color: #606266; font-size: 14px; }
+    .filter-panel-control {
+      flex: 1;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 10px;
+      border: 1px solid #dcdfe6;
+      border-radius: 4px;
+      color: #606266;
+      background: #fff;
+      font-size: 12px;
+      text-align: left;
+    }
+    .mini-tags { display: flex; gap: 4px; overflow: hidden; }
+    .mini-tags .el-tag { flex-shrink: 0; }
+
+    .my-sop-v3-container { min-height: calc(100vh - 134px); }
+    .after-class-practice { padding: 20px; }
+    .student-homework { margin: 0; }
+    .chapter-card {
+      padding: 18px 0 14px 20px;
+      border-radius: 8px;
+      background: #fff;
+    }
+    .chapter-box {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 0 30px 10px 0;
+    }
+    .chapter-filter-area { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; min-width: 0; }
+    .chapter-field { display: flex; align-items: center; gap: 12px; color: #606266; font-size: 14px; }
+    .demo-select {
+      position: relative;
+      min-width: 150px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      padding: 0 30px 0 10px;
+      border: 1px solid #dcdfe6;
+      border-radius: 4px;
+      color: #606266;
+      background: #fff;
+      font-size: 12px;
+      text-align: left;
+      white-space: nowrap;
+    }
+    .demo-select:hover, .demo-select.is-open { border-color: #c0c4cc; }
+    .demo-select .el-icon-arrow-down { position: absolute; right: 9px; color: #c0c4cc; font-size: 12px; }
+    .class-select-trigger { min-width: 210px; }
+    .lesson-select-trigger { min-width: 230px; }
+    .class-tags { display: flex; gap: 4px; min-width: 0; overflow: hidden; }
+    .class-tags .el-tag { flex: 0 0 auto; }
+    .chapter-actions { flex-shrink: 0; display: flex; align-items: center; gap: 10px; }
+    .el-button--mini { padding: 7px 15px; font-size: 12px; border-radius: 3px; }
+    .text-link { color: #1989fa; font-size: 14px; }
+
+    .class-menu {
+      position: absolute;
+      z-index: 120;
+      top: 40px;
+      left: 0;
+      width: 360px;
+      max-height: 326px;
+      overflow-y: auto;
+      padding: 6px 0;
+      border: 1px solid #e4e7ed;
+      border-radius: 4px;
+      background: #fff;
+      box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);
+    }
+    .class-menu-head { padding: 7px 12px 6px; color: #909399; font-size: 12px; }
+    .class-option {
+      width: 100%;
+      min-height: 40px;
+      display: grid;
+      grid-template-columns: 18px minmax(0, 1fr);
+      align-items: center;
+      gap: 9px;
+      padding: 6px 12px;
+      color: #606266;
+      text-align: left;
+    }
+    .class-option:hover { background: #f5f7fa; }
+    .class-option.is-selected { color: var(--brand); }
+    .class-option.is-limit { color: #9ca2ab; background: #fafafa; }
+    .class-option.is-limit .demo-checkbox { opacity: .55; }
+    .class-option-name { display: block; font-size: 13px; }
+    .class-status-panel { margin: 0 20px 10px 0; border: 1px solid #f2dfbb; border-radius: 4px; background: #fffaf0; }
+    .class-status-item { display: flex; align-items: center; gap: 8px; min-height: 34px; padding: 7px 10px; color: #8e641e; font-size: 12px; border-bottom: 1px solid #f6e8cd; }
+    .class-status-item:last-child { border-bottom: 0; }
+    .class-status-item.is-error { color: #c45656; background: #fff7f7; border-bottom-color: #f7dddd; }
+    .class-status-action { margin-left: auto; color: #1989fa; font-size: 12px; }
+
+    .coverage-summary {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 0 20px 10px 0;
+      padding: 9px 12px;
+      border: 1px solid #ffe0d6;
+      border-radius: 4px;
+      color: #606266;
+      background: #fff8f5;
+      font-size: 12px;
+    }
+    .coverage-summary__main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .coverage-summary__label { color: #ff5f2e; font-weight: 600; }
+    .coverage-classes { display: flex; flex-wrap: wrap; gap: 6px; }
+    .coverage-class-chip {
+      padding: 2px 7px;
+      border: 1px solid #ffd4c6;
+      border-radius: 3px;
+      color: #8b5948;
+      background: #fff;
+    }
+    .coverage-class-chip.is-missing { color: #b76b12; border-color: #f2dfbb; background: #fffaf0; }
+    .coverage-actions { color: #909399; font-size: 11px; }
+
+    .comment-con { margin-top: 10px; }
+    .comment-container { border-radius: 2px; background: #fff; }
+    .search-section { display: flex; justify-content: space-between; padding: 20px 20px 0; background: #fff; }
+    .search-part { flex: 1; min-width: 0; }
+    .filter-form { display: flex; flex-wrap: wrap; align-items: flex-start; }
+    .filter-form .el-form-item { display: flex; align-items: center; margin: 0 24px 10px 0; }
+    .filter-form .el-form-item__label { flex-shrink: 0; padding-right: 10px; color: #606266; font-size: 12px; line-height: 28px; }
+    .filter-form .el-form-item__content { display: flex; align-items: center; }
+    .filter-input-wrap { position: relative; width: 150px; }
+    .filter-input-wrap.is-text { width: 200px; }
+    .filter-input {
+      width: 100%;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 25px 0 8px;
+      overflow: hidden;
+      border: 1px solid #dcdfe6;
+      border-radius: 4px;
+      color: #606266;
+      background: #fff;
+      font-size: 12px;
+      text-align: left;
+      white-space: nowrap;
+    }
+    .filter-input:hover, .filter-input.is-open { border-color: #c0c4cc; }
+    .filter-input.is-active { color: #ff5f2e; border-color: #ffb49d; }
+    .filter-input__text { overflow: hidden; text-overflow: ellipsis; }
+    .filter-input .el-icon-arrow-down { position: absolute; top: 8px; right: 8px; color: #c0c4cc; font-size: 12px; }
+    .filter-input.is-text .filter-input__text.is-placeholder { color: #a8abb2; }
+    .filter-part { flex-shrink: 0; padding-left: 20px; }
+    .dropdown-content { display: flex; align-items: center; gap: 4px; margin-top: 6px; color: #1989fa; font-size: 14px; white-space: nowrap; }
+
+    .filter-popover {
+      position: fixed;
+      z-index: 130;
+      width: 200px;
+      max-height: 288px;
+      overflow: auto;
+      padding: 6px 0;
+      border: 1px solid #e4e7ed;
+      border-radius: 4px;
+      background: #fff;
+      box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);
+    }
+    .filter-popover-title { padding: 7px 12px; color: #909399; font-size: 12px; }
+    .filter-option {
+      width: 100%;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      color: #606266;
+      font-size: 12px;
+      text-align: left;
+    }
+    .filter-option:hover { background: #f5f7fa; }
+    .filter-option.is-selected { color: #ff5f2e; font-weight: 500; }
+    .filter-option .el-icon-check { color: transparent; font-size: 12px; }
+    .filter-option.is-selected .el-icon-check { color: #ff5f2e; }
+    .popover-text-input { padding: 4px 8px 8px; }
+    .popover-text-input .el-input__inner { width: 100%; }
+    .popover-done { margin: 6px 8px 2px; width: calc(100% - 16px); }
+
+    .batch-feedback-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 8px 20px;
+    }
+    .batch-feedback-bar__left, .batch-feedback-bar__right { display: flex; align-items: center; gap: 12px; }
+    .batch-feedback-count, .batch-feedback-selected { color: #606266; font-size: 12px; }
+    .batch-feedback-hint { color: #e6a23c; font-size: 12px; }
+    .demo-checkbox { width: 14px; height: 14px; display: inline-flex; padding: 0; border: 0; background: transparent; }
+    .demo-checkbox .el-checkbox__inner { width: 14px; height: 14px; display: inline-block; }
+    .demo-checkbox.is-checked .el-checkbox__inner,
+    .demo-checkbox.is-partial .el-checkbox__inner {
+      border-color: #ff5f2e;
+      background: #ff5f2e;
+    }
+    .demo-checkbox.is-checked .el-checkbox__inner::after {
+      position: absolute;
+      width: 3px;
+      height: 7px;
+      border: 1px solid #fff;
+      border-top: 0;
+      border-left: 0;
+      transform: rotate(45deg) scaleY(1);
+      transition: transform .15s ease-in .05s;
+      content: "";
+      left: 4px;
+      top: 1px;
+    }
+    .demo-checkbox.is-partial .el-checkbox__inner::before {
+      position: absolute;
+      top: 5px;
+      right: 2px;
+      left: 2px;
+      height: 2px;
+      background: #fff;
+      content: "";
+    }
+    .demo-checkbox:disabled { cursor: not-allowed; opacity: .55; }
+
+    .comment-list { padding: 10px 20px 20px; }
+    .comment-section { padding-bottom: 20px; }
+    .work-item { padding-bottom: 30px; border-bottom: 1px dashed var(--line-light); }
+    .work-item:last-child { border-bottom: 0; }
+    .comment-item { position: relative; padding-top: 20px; }
+    .comment-item.is-featured::before {
+      position: absolute;
+      top: 20px;
+      right: 0;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      opacity: .08;
+      background: #ff5f2e;
+      content: "";
+    }
+    .comment-content { position: relative; z-index: 2; flex: 1; padding-left: 50px; }
+    .comment-content.is-batch { padding-left: 78px; }
+    .comment-user-info-content { display: flex; }
+    .batch-row-check { position: absolute; top: 18px; left: 0; z-index: 3; line-height: 1; }
+    .head-icon { width: 50px; height: 50px; margin-left: -50px; display: grid; place-items: center; flex-shrink: 0; overflow: hidden; border-radius: 50%; color: #7c5a4d; background: #f2e3dc; font-size: 16px; font-weight: 600; }
+    .head-icon.tone-2 { color: #3d6354; background: #dcece4; }
+    .head-icon.tone-3 { color: #40537a; background: #e0e7f4; }
+    .user-info { display: flex; flex: 1; flex-direction: column; min-width: 0; margin-left: 10px; padding: 2px 0; }
+    .comment-title { display: flex; flex: 1; flex-wrap: wrap; align-items: center; gap: 6px 0; min-width: 0; }
+    .user-name { color: #333; font-size: 16px; font-weight: bold; line-height: 22px; }
+    .complete-num { margin-left: 10px; color: rgba(0,0,0,.45); font-size: 12px; line-height: 22px; }
+    .commit-sn { margin-left: 10px; color: #000; font-weight: bold; }
+    .comment-title .el-tag { margin-left: 10px; }
+    .score-content { display: flex; align-items: center; min-height: 25px; margin-top: 2px; }
+    .score-stars { display: flex; gap: 1px; color: #f4b328; font-size: 16px; letter-spacing: 1px; }
+    .score-stars span.is-empty { color: #c0c4cc; }
+    .essence-state { display: flex; align-items: center; gap: 12px; margin-left: 10px; color: #c0c4cc; font-size: 12px; }
+    .essence-state label { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
+    .radio-dot { width: 14px; height: 14px; display: inline-grid; place-items: center; border: 1px solid #dcdfe6; border-radius: 50%; }
+    .essence-state label.is-selected .radio-dot { border-color: #ff5f2e; background: #ff5f2e; }
+    .essence-state label.is-selected .radio-dot::after { width: 4px; height: 4px; border-radius: 50%; background: #fff; content: ""; }
+    .wrok-content { display: flex; flex-wrap: wrap; padding: 10px; }
+    .comment-text { color: #333; font-size: 14px; line-height: 20px; letter-spacing: 1px; white-space: pre-line; }
+    .comment-text + .comment-text { margin-top: 8px; color: #777; }
+    .comment-status { display: flex; align-items: center; padding-left: 10px; color: #666; font-size: 12px; line-height: 1; }
+    .create-time { display: flex; flex: 1; align-items: center; }
+    .praise-num { margin-left: 4px; }
+    .praise-img { width: 12px; height: 12px; margin: 0 4px 0 10px; color: #ff8a65; }
+    .praise-size { display: flex; align-items: center; }
+    .remark-btn { display: flex; align-items: center; gap: 3px; margin-left: 10px; color: #606266; cursor: pointer; }
+    .remark-btn:hover { color: #1989fa; }
+    .remark-btn.is-disabled { color: #c0c4cc; cursor: not-allowed; }
+    .remark-btn.is-disabled:hover { color: #c0c4cc; }
+    .batch-disabled-tip { color: #909399; }
+
+    .no-answers { min-height: 260px; display: flex; align-items: center; justify-content: center; color: #666; }
+    .pagination { display: flex; justify-content: flex-end; padding: 38px 10px; border-radius: 0 0 8px 8px; background: #fff; }
+    .demo-pagination { display: flex; align-items: center; gap: 10px; color: #606266; font-size: 13px; }
+    .demo-pagination .el-select { width: 100px; }
+    .page-btn { min-width: 30px; height: 28px; padding: 0 6px; border-radius: 2px; color: #606266; background: #f4f4f5; font-size: 13px; }
+    .page-btn.is-active { color: #fff; background: #ff5f2e; }
+    .page-btn:disabled { color: #c0c4cc; cursor: not-allowed; }
+
+    #feedbackDialog { display: none; z-index: 2000; background: rgba(0,0,0,.5); }
+    #feedbackDialog.is-open { display: flex; align-items: flex-start; justify-content: center; padding-top: 15vh; overflow: auto; }
+    #feedbackDialog .el-dialog { width: 560px; margin: 0 0 50px; background: #fff; }
+    .demo-dialog__close { position: absolute; top: 20px; right: 20px; padding: 0; color: #909399; font-size: 16px; }
+    .batch-dialog-summary { margin: 0 0 12px; }
+    .batch-dialog-input { width: 100%; min-height: 145px; padding: 5px 10px; border: 1px solid #dcdfe6; border-radius: 4px; color: #606266; font-size: 13px; line-height: 1.6; resize: vertical; }
+    .batch-dialog-tip { margin: 8px 0 0; color: #909399; font-size: 12px; }
+    .batch-dialog-preview { margin-top: 12px; padding: 10px 12px; border-radius: 4px; background: #f5f7fa; }
+    .batch-dialog-preview__title { margin-bottom: 6px; color: #606266; font-size: 12px; }
+    .batch-dialog-preview__content { color: #303133; font-size: 13px; line-height: 1.6; white-space: pre-wrap; }
+    .batch-dialog-warning { margin-top: 12px; color: #e6a23c; font-size: 12px; line-height: 1.5; }
+    #confirmFeedbackButton:disabled { color: #fff; border-color: #fab6a2; background: #fab6a2; cursor: not-allowed; }
+    .demo-message {
+      position: fixed;
+      z-index: 1100;
+      top: 76px;
+      left: 50%;
+      max-width: 460px;
+      padding: 11px 18px;
+      border: 1px solid #ebeef5;
+      border-radius: 4px;
+      color: #606266;
+      background: #edf2fc;
+      box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);
+      font-size: 13px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, -12px);
+      transition: opacity .18s ease, transform .18s ease;
+    }
+    .demo-message.is-visible { opacity: 1; transform: translate(-50%, 0); }
+    .demo-message.is-warning { color: #8e641e; border-color: #f2dfbb; background: #fdf6ec; }
+    .demo-message.is-success { color: #529b2e; border-color: #d8efd2; background: #f0f9eb; }
+
+    @media (max-width: 1320px) {
+      .filter-form .el-form-item { margin-right: 18px; }
+      .filter-input-wrap { width: 140px; }
+      .filter-input-wrap.is-text { width: 170px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="layout-header-content">
+    <div class="header-content">
+      <div class="logo-box"><img src="assets/img/open-logo.svg" alt="得到"></div>
+      <div class="handle-icon"><img src="assets/img/handle-icon.svg" alt="菜单"></div>
+      <div class="lingxi-ai-icon"><img src="assets/img/lingxi.png" alt="灵犀"></div>
+    </div>
+    <div class="header-user-avatar">林</div>
+    <div class="header-user-name">林老师</div>
+  </header>
+
+  <aside class="sc_menu noMenuCollapse">
+    <div class="menu-group-title"><img src="assets/img/workbench-active.svg" alt="">班主任工作台</div>
+    <div class="menu-item is-active">一站式工作台</div>
+    <div class="menu-item">SOP管理看板</div>
+    <div class="menu-item">月度绩效</div>
+    <div class="menu-item">我的班级</div>
+    <div class="menu-item">监课管理</div>
+    <div class="menu-item">阶段学习报告</div>
+    <div class="menu-item">续费明细</div>
+    <div class="menu-item">评分评价</div>
+  </aside>
+
+  <main class="router-view-content">
+    <div class="router-view-container">
+      <div class="my-sop-v3-container">
+        <div class="header-row">
+          <div class="tabs-col">
+            <div class="demo-tabs-nav">
+              <div class="demo-tab">工作台</div>
+              <div class="demo-tab is-active">课后练习</div>
+              <div class="demo-tab">正价课监课</div>
+              <div class="demo-tab">专项课监课</div>
+              <div class="demo-tab">班级数据</div>
+              <div class="demo-tab">临调学员</div>
+              <div class="demo-tab">转介绍</div>
+            </div>
+          </div>
+          <div class="filter-col">
+            <button class="filter-trigger" id="headerFilterTrigger" type="button">
+              <i class="el-icon-s-operation filter-icon"></i><span>林老师</span>
+            </button>
+            <i class="el-icon-setting setting-icon"></i>
+          </div>
+        </div>
+        <div class="header-filter-popover" id="headerFilterPopover" hidden>
+          <div class="filter-panel-item">
+            <span class="filter-panel-label">教辅：</span>
+            <button class="filter-panel-control" type="button"><span>林老师-林老师</span><i class="el-icon-arrow-down"></i></button>
+          </div>
+          <div class="filter-panel-item">
+            <span class="filter-panel-label">课程：</span>
+            <button class="filter-panel-control" type="button"><span>阅读进阶秋季课</span><i class="el-icon-arrow-down"></i></button>
+          </div>
+          <div class="filter-panel-item">
+            <span class="filter-panel-label">班级：</span>
+            <button class="filter-panel-control" type="button">
+              <span class="mini-tags">
+                <span class="el-tag el-tag--small">阅读 A 班</span>
+                <span class="el-tag el-tag--small">阅读 B 班</span>
+                <span class="el-tag el-tag--small">阅读 C 班</span>
+              </span>
+              <i class="el-icon-arrow-down"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="after-class-practice">
+          <div class="student-homework">
+            <section class="chapter-card">
+              <div class="chapter-box">
+                <div class="chapter-filter-area">
+                  <div class="chapter-field">
+                    <span>班级</span>
+                    <div style="position:relative;">
+                      <button class="demo-select class-select-trigger" id="classTrigger" type="button" aria-expanded="false">
+                        <span class="class-tags" id="classValue"></span><i class="el-icon-arrow-down"></i>
+                      </button>
+                      <div class="class-menu" id="classMenu" hidden>
+                        <div class="class-menu-head" id="classMenuHint"></div>
+                        <div id="classOptions"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="chapter-field">
+                    <span>小节名称</span>
+                    <button class="demo-select lesson-select-trigger" type="button">
+                      <span>第 8 讲 · 把人物写活：动作与语言</span><i class="el-icon-arrow-down"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="chapter-actions">
+                  <button class="el-button el-button--default el-button--mini" type="button">作业管理</button>
+                  <button class="el-button el-button--default el-button--mini" type="button">导出作业数据</button>
+                  <button class="text-link" type="button">展开点评统计⌄</button>
+                </div>
+              </div>
+              <div class="coverage-summary" id="coverageSummary">
+                <div class="coverage-summary__main">
+                  <span class="coverage-summary__label">本次覆盖</span>
+                  <span class="coverage-classes" id="coverageClasses"></span>
+                </div>
+                <span class="coverage-actions" id="coverageMeta"></span>
+              </div>
+              <div class="class-status-panel" id="classStatusPanel" hidden></div>
+            </section>
+
+            <section class="comment-con">
+              <div class="comment-container">
+                <div class="search-section">
+                  <div class="search-part">
+                    <div class="filter-form" id="filterForm"></div>
+                  </div>
+                  <div class="filter-part">
+                    <button class="dropdown-content" id="sortTrigger" type="button">
+                      <span id="sortLabel">提交时间降序</span><i class="el-icon-arrow-down"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="batch-feedback-bar">
+                  <div class="batch-feedback-bar__left" id="batchIdle">
+                    <span class="batch-feedback-count">共 <span id="totalCount">0</span> 条作业</span>
+                  </div>
+                  <div class="batch-feedback-bar__left" id="batchActive" hidden>
+                    <button class="batch-feedback-check" id="selectAllButton" type="button">
+                      <span class="el-checkbox" style="display:inline-flex;">
+                        <span class="demo-checkbox" id="selectAllCheck"><span class="el-checkbox__inner"></span></span>
+                      </span>
+                      <span style="margin-left:6px;color:#606266;font-size:12px;">全选当前页</span>
+                    </button>
+                    <span class="batch-feedback-selected">已选 <span id="selectedCount">0</span> 条</span>
+                    <span class="batch-feedback-hint" id="batchHint"></span>
+                  </div>
+                  <div class="batch-feedback-bar__right" id="batchActionIdle">
+                    <button class="el-button el-button--primary el-button--mini" id="enterBatchButton" type="button">批量反馈点评</button>
+                  </div>
+                  <div class="batch-feedback-bar__right" id="batchActionActive" hidden>
+                    <button class="el-button el-button--primary el-button--mini" id="openFeedbackButton" type="button" disabled>批量反馈 (0)</button>
+                    <button class="el-button el-button--warning el-button--mini" id="cancelBatchButton" type="button">取消</button>
+                  </div>
+                </div>
+
+                <div class="comment-list">
+                  <div class="comment-section" id="studentRows"></div>
+                  <div class="no-answers" id="emptyState" hidden>
+                    <div>
+                      <strong id="emptyTitle" style="display:block;margin-bottom:8px;color:#606266;font-size:14px;">暂时无人提交练习</strong>
+                      <span id="emptyDescription">请切换课节或调整筛选条件后重试</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="pagination">
+                  <div class="demo-pagination" id="pagination"></div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div class="filter-popover" id="filterPopover" hidden>
+    <div class="filter-popover-title" id="filterPopoverTitle"></div>
+    <div id="filterPopoverBody"></div>
+  </div>
+
+  <div class="el-dialog__wrapper" id="feedbackDialog" aria-hidden="true">
+      <div class="el-dialog" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle">
+        <div class="el-dialog__header">
+          <span class="el-dialog__title" id="feedbackTitle">批量反馈</span>
+          <button class="demo-dialog__close el-icon-close" id="closeDialogButton" type="button" aria-label="关闭"></button>
+        </div>
+        <div class="el-dialog__body">
+          <p class="batch-dialog-summary" id="dialogSummary"></p>
+          <textarea class="batch-dialog-input" id="feedbackText" rows="8" placeholder="请填写反馈内容"></textarea>
+          <p class="batch-dialog-tip">微信反馈时使用的称呼、链接会与反馈内容合并生成完整的反馈发送给家长。</p>
+          <div class="batch-dialog-preview">
+            <div class="batch-dialog-preview__title">完整反馈预览</div>
+            <div class="batch-dialog-preview__content" id="feedbackPreview"></div>
+            <p class="batch-dialog-tip">预览以「家长称呼」为例，实际发送时会逐位替换家长真正称呼</p>
+          </div>
+          <div class="batch-dialog-warning" id="wecomWarning" hidden></div>
+        </div>
+        <div class="el-dialog__footer">
+          <button class="el-button el-button--default el-button--small" id="cancelDialogButton" type="button">取消</button>
+          <button class="el-button el-button--primary el-button--small" id="confirmFeedbackButton" type="button">确认反馈</button>
+        </div>
+      </div>
+  </div>
+
+  <div class="demo-message" id="message" role="status" aria-live="polite"><span id="messageText"></span></div>
+
+  <script>
+    const classData = [
+      { id: 'A', name: '阅读 A 班', hasLesson: true, hasPermission: true, loadFailed: false, truncated: false },
+      { id: 'B', name: '阅读 B 班', hasLesson: true, hasPermission: true, loadFailed: false, truncated: false },
+      { id: 'C', name: '阅读 C 班', hasLesson: true, hasPermission: true, loadFailed: false, truncated: false },
+      { id: 'D', name: '阅读 D 班', hasLesson: false, hasPermission: true, loadFailed: false, truncated: false },
+      { id: 'E', name: '阅读 E 班', hasLesson: true, hasPermission: true, loadFailed: true, truncated: false },
+      { id: 'F', name: '阅读 F 班', hasLesson: true, hasPermission: false, loadFailed: false, truncated: false },
+      { id: 'G', name: '阅读 G 班', hasLesson: true, hasPermission: true, loadFailed: false, truncated: true, pendingTotal: 326 }
+    ];
+
+    const studentData = [
+      { id: '1', name: '林小满', classId: 'A', studentKey: 'STUDENT-LXM', phone: '138****1001', time: '2026-10-24 10:26', sortTime: 1026, rank: 2, quote: '“雨点落在窗台上，像一支停不下来的小鼓队，一下一下敲着安静的下午。”', comment: '老师点评：观察细致，动作描写已有画面感。', rating: 5, sift: 'unsifted', commentState: 'aiPassedPending', feedbackStatus: 'pending', teacher: '林老师', mode: 'ai2', reply: 'no', rectify: 'no', sendStatus: 'not-sent', viewStatus: 'not-viewed', studentType: 'new', renewalIntent: 'B', renewed: 'no', tempTransfer: 'no', completion: 'complete', likes: 8, noWecom: false },
+      { id: '15', name: '林小满', classId: 'B', studentKey: 'STUDENT-LXM', phone: '138****1001', time: '2026-10-24 10:31', sortTime: 1031, rank: 1, quote: '“雨点落在窗台上，像一支停不下来的小鼓队，一下一下敲着安静的下午。”', comment: '老师点评：同一学员跨班出现的演示数据。', rating: 5, sift: 'unsifted', commentState: 'aiPassedPending', feedbackStatus: 'pending', teacher: '周老师', mode: 'ai2', reply: 'no', rectify: 'no', sendStatus: 'not-sent', viewStatus: 'not-viewed', studentType: 'new', renewalIntent: 'B', renewed: 'no', tempTransfer: 'yes', completion: 'complete', likes: 0, noWecom: false },
+      { id: '2', name: '周予安', classId: 'B', time: '2026-10-24 10:18', sortTime: 1018, rank: 6, quote: '“妈妈把伞往我这边斜了斜，自己的肩膀却湿了。”', comment: '老师点评：借动作写关心，情感表达自然。', rating: 5, sift: 'unsifted', commentState: 'aiPassedPending', feedbackStatus: 'pending', teacher: '周老师', mode: 'ai2', reply: 'yes', rectify: 'no', sendStatus: 'pending', viewStatus: 'not-viewed', studentType: 'old', renewalIntent: 'A', renewed: 'no', tempTransfer: 'no', completion: 'incomplete', likes: 5, noWecom: true },
+      { id: '3', name: '陈一诺', classId: 'C', time: '2026-10-24 09:57', sortTime: 957, rank: 9, quote: '“爷爷的手指在书页上慢慢移动，像在给每个字点名。”', comment: '老师点评：比喻新颖，人物动作与年龄感相吻合。', rating: 5, sift: 'unsifted', commentState: 'manual', feedbackStatus: 'pending', teacher: '陈老师', mode: 'ai2', reply: 'no', rectify: 'yes', sendStatus: 'not-sent', viewStatus: 'viewed', studentType: 'new', renewalIntent: 'C', renewed: 'no', tempTransfer: 'no', completion: 'complete', likes: 7, noWecom: false },
+      { id: '4', name: '许星禾', classId: 'A', time: '2026-10-24 09:41', sortTime: 941, rank: 12, quote: '“他推门进来时，先抖了抖肩上的雪，才笑着叫我的名字。”', comment: '老师点评：连续动作清楚，人物出场很有镜头感。', rating: 4, sift: 'unsifted', commentState: 'aiPassedPending', feedbackStatus: 'pending', teacher: '林老师', mode: 'legacy', reply: 'yes', rectify: 'no', sendStatus: 'not-sent', viewStatus: 'not-viewed', studentType: 'new', renewalIntent: 'A', renewed: 'no', tempTransfer: 'no', completion: 'complete', likes: 4, noWecom: false },
+      { id: '5', name: '苏念', classId: 'B', time: '2026-10-24 09:32', sortTime: 932, rank: 14, quote: '“风把晾衣绳吹成了一条微微发抖的线。”', comment: '老师点评：环境描写细微，能托住人物心情。', rating: 5, sift: 'unsifted', commentState: 'aiPublished', feedbackStatus: 'feedback', teacher: '周老师', mode: 'ai2', reply: 'no', rectify: 'no', sendStatus: 'sent', viewStatus: 'viewed', studentType: 'old', renewalIntent: 'B', renewed: 'yes', tempTransfer: 'no', completion: 'complete', likes: 11, noWecom: false },
+      { id: '6', name: '叶知秋', classId: 'C', time: '2026-10-24 09:16', sortTime: 916, rank: 17, quote: '“她一低头，发梢就像被风吹动的柳枝，轻轻扫过书页。”', comment: '等待老师点评', rating: 0, sift: 'none', commentState: 'uncommented', feedbackStatus: 'none', teacher: '', mode: 'none', reply: 'no', rectify: 'no', sendStatus: 'not-sent', viewStatus: 'not-viewed', studentType: 'new', renewalIntent: 'D', renewed: 'no', tempTransfer: 'no', completion: 'complete', likes: 6, noWecom: false },
+      { id: '7', name: '江予白', classId: 'A', time: '2026-10-24 09:03', sortTime: 903, rank: 20, quote: '“爸爸笑的时候，眼角的细纹像被阳光轻轻拨开。”', comment: '老师点评：神态描写自然，人物情绪克制而准确。', rating: 5, sift: 'sifted', commentState: 'commented', feedbackStatus: 'pending', teacher: '林老师', mode: 'ai2', reply: 'yes', rectify: 'no', sendStatus: 'not-sent', viewStatus: 'viewed', studentType: 'old', renewalIntent: 'A', renewed: 'yes', tempTransfer: 'no', completion: 'complete', likes: 18, noWecom: false },
+      { id: '8', name: '宋知遥', classId: 'B', time: '2026-10-24 08:54', sortTime: 854, rank: 23, quote: '“她捏着衣角站了很久，终于把那句话轻轻放了出来。”', comment: 'AI 点评已生成，等待审核。', rating: 0, sift: 'none', commentState: 'aiAudit', feedbackStatus: 'none', teacher: '', mode: 'legacy', reply: 'no', rectify: 'no', sendStatus: 'pending', viewStatus: 'not-viewed', studentType: 'new', renewalIntent: 'B', renewed: 'no', tempTransfer: 'yes', completion: 'incomplete', likes: 14, noWecom: false },
+      { id: '9', name: '贺嘉言', classId: 'C', time: '2026-10-24 08:47', sortTime: 847, rank: 25, quote: '“门外传来脚步声，忽远忽近，像在走廊里来回试探。”', comment: '老师点评：声音描写有层次，氛围感很好。', rating: 4, sift: 'unsifted', commentState: 'commented', feedbackStatus: 'feedback', teacher: '陈老师', mode: 'ai2', reply: 'yes', rectify: 'yes', sendStatus: 'sent', viewStatus: 'viewed', studentType: 'old', renewalIntent: 'C', renewed: 'no', tempTransfer: 'no', completion: 'complete', likes: 3, noWecom: false },
+      { id: '10', name: '白一川', classId: 'A', time: '2026-10-24 08:31', sortTime: 831, rank: 28, quote: '“小狗跑过来时，尾巴像一面快乐的小旗子。”', comment: '老师点评：比喻生动，可以再补充动作顺序。', rating: 3, sift: 'unsifted', commentState: 'commented', feedbackStatus: 'pending', teacher: '林老师', mode: 'legacy', reply: 'no', rectify: 'no', sendStatus: 'not-sent', viewStatus: 'not-viewed', studentType: 'new', renewalIntent: 'D', renewed: 'no', tempTransfer: 'no', completion: 'incomplete', likes: 2, noWecom: false },
+      { id: '11', name: '顾清和', classId: 'B', time: '2026-10-24 08:24', sortTime: 824, rank: 0, quote: '暂无练习内容', comment: '等待学生提交', rating: 0, sift: 'none', commentState: 'uncommented', feedbackStatus: 'none', teacher: '', mode: 'none', reply: 'no', rectify: 'no', sendStatus: 'not-sent', viewStatus: 'not-viewed', studentType: 'new', renewalIntent: 'B', renewed: 'no', tempTransfer: 'no', completion: 'incomplete', likes: 0, noWecom: false },
+      { id: '12', name: '沈星河', classId: 'C', time: '2026-10-24 08:16', sortTime: 816, rank: 3, quote: '“车窗外的树一排排退后，像有人把绿色慢慢卷起来。”', comment: 'AI 点评已生成，等待审核。', rating: 0, sift: 'none', commentState: 'aiAudit', feedbackStatus: 'none', teacher: '', mode: 'ai2', reply: 'no', rectify: 'no', sendStatus: 'not-sent', viewStatus: 'not-viewed', studentType: 'new', renewalIntent: 'C', renewed: 'no', tempTransfer: 'no', completion: 'complete', likes: 1, noWecom: false },
+      { id: '13', name: '唐可心', classId: 'A', time: '2026-10-24 08:05', sortTime: 805, rank: 31, quote: '“奶奶把糖纸一点点展平，夹进那本旧书里。”', comment: '老师点评：生活细节选得好，动作有情感。', rating: 5, sift: 'unsifted', commentState: 'manual', feedbackStatus: 'pending', teacher: '陈老师', mode: 'ai2', reply: 'yes', rectify: 'no', sendStatus: 'not-sent', viewStatus: 'viewed', studentType: 'old', renewalIntent: 'A', renewed: 'yes', tempTransfer: 'yes', completion: 'incomplete', likes: 12, noWecom: false },
+      { id: '14', name: '陆时雨', classId: 'C', time: '2026-10-24 07:58', sortTime: 758, rank: 36, quote: '“他把书包抱在胸前，像抱着一只怕被雨淋湿的小猫。”', comment: '老师点评：比喻和动作结合得自然，人物心理可再补一笔。', rating: 5, sift: 'sifted', commentState: 'commented', feedbackStatus: 'pending', teacher: '陈老师', mode: 'ai2', reply: 'no', rectify: 'yes', sendStatus: 'not-sent', viewStatus: 'not-viewed', studentType: 'old', renewalIntent: 'B', renewed: 'no', tempTransfer: 'no', completion: 'complete', likes: 15, noWecom: false }
+      ,{ id: '16', name: '沈知夏', classId: 'E', time: '2026-10-24 10:08', sortTime: 1008, rank: 8, quote: '“她把窗户推开一条缝，风就顺着书页轻轻翻了过去。”', comment: '老师点评：动作衔接自然，环境与人物情绪相连。', rating: 5, sift: 'unsifted', commentState: 'aiPassedPending', feedbackStatus: 'pending', teacher: '林老师', mode: 'ai2', reply: 'no', rectify: 'no', sendStatus: 'not-sent', viewStatus: 'not-viewed', studentType: 'new', renewalIntent: 'B', renewed: 'no', tempTransfer: 'no', completion: 'complete', likes: 6, noWecom: false }
+      ,{ id: '17', name: '程安然', classId: 'G', time: '2026-10-24 09:48', sortTime: 948, rank: 11, quote: '“猫从沙发背上跳下来，落地时连一点声音都没有。”', comment: '老师点评：动作轻巧，画面节奏很好。', rating: 5, sift: 'unsifted', commentState: 'manual', feedbackStatus: 'pending', teacher: '陈老师', mode: 'ai2', reply: 'yes', rectify: 'no', sendStatus: 'not-sent', viewStatus: 'viewed', studentType: 'old', renewalIntent: 'A', renewed: 'yes', tempTransfer: 'no', completion: 'complete', likes: 9, noWecom: false }
+      ,{ id: '18', name: '林见川', classId: 'G', time: '2026-10-24 09:21', sortTime: 921, rank: 15, quote: '“他把风筝线绕了一圈又一圈，手心全是细细的汗。”', comment: '老师点评：动作和心情结合得很自然。', rating: 4, sift: 'unsifted', commentState: 'aiPassedPending', feedbackStatus: 'pending', teacher: '林老师', mode: 'legacy', reply: 'no', rectify: 'no', sendStatus: 'pending', viewStatus: 'not-viewed', studentType: 'new', renewalIntent: 'C', renewed: 'no', tempTransfer: 'no', completion: 'complete', likes: 5, noWecom: false }
+    ];
+
+    const filterDefinitions = [
+      { key: 'commentState', label: '是否点评', labelWidth: '70px', type: 'multi', collapseTags: true, defaultValue: ['uncommented', 'aiReview', 'aiAudit', 'aiPassedPending', 'manual'], options: [['all', '全部'], ['commented', '已点评'], ['uncommented', '未点评'], ['aiReview', 'AI点评中'], ['aiAudit', 'AI已点评（待审核）'], ['aiReviewed', 'AI已点评（已审核）'], ['aiPassedPending', 'AI 审核通过 · 待抽检'], ['aiPublished', 'AI 审核通过 · 已发布'], ['manual', 'AI 审核不通过 · 待人工'], ['manualPassed', 'AI 审核不通过 · 人工通过']] },
+      { key: 'mode', label: '批改模式', labelWidth: '70px', type: 'single', defaultValue: 'all', options: [['all', '全部'], ['ai2', 'AI批改2.0'], ['legacy', 'AI批改（旧版）']] },
+      { key: 'sift', label: '是否精选', labelWidth: '70px', type: 'single', defaultValue: 'all', options: [['all', '全部'], ['sifted', '已精选'], ['pending', '待精选'], ['unsifted', '未精选']] },
+      { key: 'rating', label: '评分', labelWidth: '50px', type: 'multi', collapseTags: true, defaultValue: ['all'], options: [['all', '全部'], ['5', '5星'], ['4', '4星'], ['3', '3星'], ['2', '2星'], ['1', '1星']] },
+      { key: 'reply', label: '是否回复', labelWidth: '70px', type: 'single', defaultValue: 'all', options: [['all', '全部'], ['yes', '是'], ['no', '否']] },
+      { key: 'rectify', label: '是否订正', labelWidth: '70px', type: 'single', defaultValue: 'all', options: [['all', '全部'], ['yes', '是'], ['no', '否']] },
+      { key: 'keyword', label: '姓名/昵称', labelWidth: '80px', type: 'text', defaultValue: '', placeholder: '输入姓名/昵称/手机号' },
+      { key: 'teacher', label: '点评老师', labelWidth: '75px', type: 'single', defaultValue: 'all', options: [['all', '全部'], ['林老师', '林老师'], ['周老师', '周老师'], ['陈老师', '陈老师']] },
+      { key: 'sendStatus', label: '是否推送', labelWidth: '75px', type: 'single', defaultValue: 'all', options: [['all', '全部'], ['not-sent', '未发送'], ['pending', '待发送'], ['sent', '已发送']] },
+      { key: 'viewStatus', label: '是否查看点评', labelWidth: '100px', type: 'single', defaultValue: 'all', options: [['all', '全部'], ['viewed', '已查看'], ['not-viewed', '未查看']] },
+      { key: 'studentType', label: '新老生', labelWidth: '75px', type: 'single', defaultValue: 'all', options: [['all', '全部'], ['new', '新生'], ['old', '老生']] },
+      { key: 'renewalIntent', label: '续费意向', labelWidth: '75px', type: 'single', defaultValue: 'all', options: [['all', '全部'], ['A', 'A'], ['B', 'B'], ['C', 'C'], ['D', 'D']] },
+      { key: 'renewed', label: '是否续费', labelWidth: '75px', type: 'single', defaultValue: 'all', options: [['all', '全部'], ['yes', '已续费'], ['no', '未续费']] },
+      { key: 'tempTransfer', label: '临时调班', labelWidth: '75px', type: 'single', defaultValue: 'all', options: [['all', '全部'], ['yes', '是'], ['no', '否']] },
+      { key: 'completion', label: '是否完课', labelWidth: '75px', type: 'single', defaultValue: 'all', options: [['all', '全部'], ['complete', '已完课'], ['incomplete', '未完课']] }
+    ];
+
+    const state = {
+      crossMode: false,
+      selectedClasses: new Set(['A', 'B', 'C']),
+      activeClassId: 'A',
+      selectedStudents: new Set(),
+      page: 1,
+      pageSize: 8,
+      sort: 'time-desc',
+      activeFilter: null,
+      filters: Object.fromEntries(filterDefinitions.map(item => [item.key, Array.isArray(item.defaultValue) ? [...item.defaultValue] : item.defaultValue]))
+    };
+
+    const $ = selector => document.querySelector(selector);
+    let messageTimer = null;
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char]));
+    }
+
+    function getDefinition(key) {
+      return filterDefinitions.find(item => item.key === key);
+    }
+
+    function optionLabel(def, value) {
+      if (def.type === 'text') return value || def.placeholder;
+      const values = Array.isArray(value) ? value : [value];
+      if (!values.length || values.includes('all')) return '全部';
+      const labels = values.map(item => (def.options.find(option => option[0] === String(item)) || [null, item])[1]);
+      return def.collapseTags && labels.length > 1 ? `${labels[0]} +${labels.length - 1}` : labels.join('、');
+    }
+
+    function isDefaultFilter(def) {
+      return JSON.stringify(state.filters[def.key]) === JSON.stringify(def.defaultValue);
+    }
+
+    function isClassAvailable(item) {
+      return Boolean(item && item.hasLesson && item.hasPermission !== false && !item.loadFailed);
+    }
+
+    function getCoveredClasses() {
+      if (!state.crossMode) {
+        return classData.filter(item => item.id === state.activeClassId && isClassAvailable(item));
+      }
+      return classData.filter(item => state.selectedClasses.has(item.id) && isClassAvailable(item));
+    }
+
+    function getMissingClasses() {
+      if (!state.crossMode) return [];
+      return classData.filter(item => state.selectedClasses.has(item.id) && !item.hasLesson);
+    }
+
+    function getPendingCount(classId) {
+      const classItem = classData.find(item => item.id === classId);
+      if (!isClassAvailable(classItem)) return 0;
+      return classItem.pendingTotal != null
+        ? classItem.pendingTotal
+        : studentData.filter(item => item.classId === classId && Number(item.rating) > 0 && item.feedbackStatus === 'pending').length;
+    }
+
+    function renderHeaderFilter() {
+      $('#headerFilterTrigger span').textContent = '林老师';
+    }
+
+    function renderClassMenu() {
+      $('#classOptions').innerHTML = classData.map(item => {
+        const selected = state.crossMode ? state.selectedClasses.has(item.id) : state.activeClassId === item.id;
+        const limited = state.crossMode && !selected && state.selectedClasses.size >= 5;
+        return `
+          <button class="class-option ${selected ? 'is-selected' : ''} ${limited ? 'is-limit' : ''}" type="button" data-class-id="${item.id}" aria-disabled="${limited}" title="${limited ? '最多选择 5 个班级' : ''}">
+            <span class="el-checkbox">
+              <span class="demo-checkbox ${selected ? 'is-checked' : ''}"><span class="el-checkbox__inner"></span></span>
+            </span>
+            <span class="class-option-name">${item.name}</span>
+          </button>
+        `;
+      }).join('');
+      $('#classMenuHint').textContent = state.crossMode
+        ? `已选 ${state.selectedClasses.size} 个班`
+        : '选择当前查看班级';
+    }
+
+    function renderCoverage() {
+      $('#coverageSummary').hidden = !state.crossMode || state.selectedClasses.size < 2;
+      const covered = getCoveredClasses();
+      const total = covered.reduce((sum, item) => sum + getPendingCount(item.id), 0);
+      const selected = state.crossMode
+        ? classData.filter(item => state.selectedClasses.has(item.id))
+        : classData.filter(item => item.id === state.activeClassId);
+      $('#coverageClasses').innerHTML = selected.map(item => `
+        <span class="coverage-class-chip ${isClassAvailable(item) ? '' : 'is-missing'}">${item.name}${isClassAvailable(item) ? '' : ` · ${item.hasPermission === false ? '无权访问' : item.hasLesson ? (item.loadFailed ? '加载失败' : '已排除') : '缺少课节'}`}</span>
+      `).join('');
+      $('#coverageMeta').textContent = `${covered.length} 个班参与 · ${total} 条待反馈作业`;
+
+      const classValue = $('#classValue');
+      if (!selected.length) {
+        classValue.innerHTML = '<span class="el-tag el-tag--small">请选择班级</span>';
+      } else {
+        classValue.innerHTML = selected.slice(0, 2).map(item => `<span class="el-tag el-tag--small">${item.name}</span>`).join('') + (selected.length > 2 ? `<span class="el-tag el-tag--small">+${selected.length - 2}</span>` : '');
+      }
+      renderClassMenu();
+      renderClassStatusPanel(selected);
+    }
+
+    function renderClassStatusPanel(selected) {
+      const messages = [];
+      selected.forEach(item => {
+        if (item.hasPermission === false) {
+          messages.push({ text: `${item.name}无权访问，已从本次反馈中排除。`, error: true });
+        } else if (!item.hasLesson) {
+          messages.push({ text: `${item.name}没有当前课节，已从本次反馈中排除。`, error: true });
+        } else if (item.loadFailed) {
+          messages.push({ text: `${item.name}作业加载失败，当前列表不完整。`, error: true, retryClass: item.id });
+        } else if (item.truncated) {
+          messages.push({ text: `${item.name}数据较多，仅加载前 300 条，请继续筛选或缩小范围。`, error: false });
+        }
+      });
+      $('#classStatusPanel').hidden = messages.length === 0;
+      $('#classStatusPanel').innerHTML = messages.map(message => `
+        <div class="class-status-item ${message.error ? 'is-error' : ''}">
+          <span>${message.text}</span>
+          ${message.retryClass ? `<button class="class-status-action" type="button" data-retry-class="${message.retryClass}">重试</button>` : ''}
+        </div>
+      `).join('');
+    }
+
+    function renderFilters() {
+      $('#filterForm').innerHTML = filterDefinitions.map(def => {
+        const active = !isDefaultFilter(def);
+        const isText = def.type === 'text';
+        const label = optionLabel(def, state.filters[def.key]);
+        return `
+          <div class="el-form-item el-form-item--mini">
+            <label class="el-form-item__label" style="width:${def.labelWidth};">${def.label}</label>
+            <div class="el-form-item__content">
+              <div class="filter-input-wrap ${isText ? 'is-text' : ''}">
+                <button class="filter-input ${active ? 'is-active' : ''} ${isText ? 'is-text' : ''}" type="button" data-filter-key="${def.key}">
+                  <span class="filter-input__text ${isText && !state.filters[def.key] ? 'is-placeholder' : ''}">${escapeHtml(label)}</span>
+                  <i class="el-icon-arrow-down"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      document.querySelectorAll('[data-filter-key]').forEach(button => {
+        button.addEventListener('click', event => {
+          event.stopPropagation();
+          openFilter(button.dataset.filterKey, button);
+        });
+      });
+    }
+
+    function openFilter(key, trigger) {
+      const def = getDefinition(key);
+      state.activeFilter = key;
+      $('#filterPopoverTitle').hidden = true;
+      renderFilterPopover();
+      $('#filterPopover').hidden = false;
+      const rect = trigger.getBoundingClientRect();
+      const width = 200;
+      $('#filterPopover').style.left = `${Math.min(window.innerWidth - width - 12, Math.max(12, rect.left))}px`;
+      $('#filterPopover').style.top = `${Math.min(window.innerHeight - 300, rect.bottom + 6)}px`;
+      document.querySelectorAll('[data-filter-key]').forEach(item => item.classList.remove('is-open'));
+      trigger.classList.add('is-open');
+    }
+
+    function renderFilterPopover() {
+      if (state.activeFilter === 'sort') {
+        const sorts = [
+          ['time-desc', '提交时间降序'], ['time-asc', '提交时间升序'],
+          ['likes-asc', '点赞升序'], ['likes-desc', '点赞降序'],
+          ['rating-asc', '评分升序'], ['rating-desc', '评分降序']
+        ];
+        $('#filterPopoverBody').innerHTML = sorts.map(([value, label]) => `
+          <button class="filter-option ${state.sort === value ? 'is-selected' : ''}" type="button" data-sort-value="${value}">
+            <span>${label}</span><i class="el-icon-check"></i>
+          </button>
+        `).join('');
+        document.querySelectorAll('[data-sort-value]').forEach(button => {
+          button.addEventListener('click', event => {
+            event.stopPropagation();
+            state.sort = button.dataset.sortValue;
+            $('#sortLabel').textContent = button.querySelector('span').textContent;
+            state.selectedStudents.clear();
+            closeFilterPopover();
+            renderStudents();
+          });
+        });
+        return;
+      }
+      const def = getDefinition(state.activeFilter);
+      if (!def) return;
+      if (def.type === 'text') {
+        $('#filterPopoverBody').innerHTML = `
+          <div class="popover-text-input">
+            <input class="el-input__inner" id="filterTextInput" value="${escapeHtml(state.filters[def.key])}" placeholder="${def.placeholder}">
+          </div>
+          <button class="el-button el-button--primary el-button--mini popover-done" type="button" data-action="apply-text">确定</button>
+        `;
+        const input = $('#filterTextInput');
+        setTimeout(() => input.focus(), 0);
+        input.addEventListener('keydown', event => {
+          if (event.key === 'Enter') applyTextFilter(def.key, input.value);
+        });
+        $('[data-action="apply-text"]').addEventListener('click', () => applyTextFilter(def.key, input.value));
+        return;
+      }
+
+      const current = state.filters[def.key];
+      const values = Array.isArray(current) ? current : [current];
+      $('#filterPopoverBody').innerHTML = def.options.map(([value, label]) => `
+        <button class="filter-option ${values.includes(value) ? 'is-selected' : ''}" type="button" data-option-value="${value}" data-filter-type="${def.type}">
+          <span>${label}</span><i class="el-icon-check"></i>
+        </button>
+      `).join('') + (def.type === 'multi' ? '<button class="el-button el-button--primary el-button--mini popover-done" type="button" data-action="done">确定</button>' : '');
+      document.querySelectorAll('[data-option-value]').forEach(button => {
+        button.addEventListener('click', event => {
+          event.stopPropagation();
+          chooseFilterValue(def, button.dataset.optionValue);
+        });
+      });
+      const done = $('[data-action="done"]');
+      if (done) done.addEventListener('click', closeFilterPopover);
+    }
+
+    function chooseFilterValue(def, value) {
+      if (def.type === 'multi') {
+        let current = Array.isArray(state.filters[def.key]) ? [...state.filters[def.key]] : [];
+        if (value === 'all') current = ['all'];
+        else {
+          current = current.filter(item => item !== 'all');
+          current = current.includes(value) ? current.filter(item => item !== value) : [...current, value];
+          if (!current.length) current = ['all'];
+        }
+        state.filters[def.key] = current;
+        renderFilterPopover();
+      } else {
+        state.filters[def.key] = value;
+        closeFilterPopover();
+      }
+      applyFilters();
+    }
+
+    function applyTextFilter(key, value) {
+      state.filters[key] = value.trim();
+      closeFilterPopover();
+      applyFilters();
+    }
+
+    function closeFilterPopover() {
+      state.activeFilter = null;
+      $('#filterPopover').hidden = true;
+      document.querySelectorAll('[data-filter-key]').forEach(item => item.classList.remove('is-open'));
+    }
+
+    function matchesFilter(student, def) {
+      const value = state.filters[def.key];
+      if (def.type === 'text') return !value || student.name.includes(value);
+      if (def.type === 'multi') {
+        const values = Array.isArray(value) ? value : [value];
+        return values.includes('all') || values.includes(String(student[def.key]));
+      }
+      return value === 'all' || value === student[def.key];
+    }
+
+    function getFilteredStudents() {
+      const covered = new Set(getCoveredClasses().map(item => item.id));
+      return studentData
+        .filter(item => state.crossMode ? covered.has(item.classId) : item.classId === state.activeClassId)
+        .filter(item => filterDefinitions.every(def => matchesFilter(item, def)))
+        .sort((a, b) => {
+          if (state.sort === 'time-asc') return a.sortTime - b.sortTime;
+          if (state.sort === 'likes-desc') return b.likes - a.likes;
+          if (state.sort === 'likes-asc') return a.likes - b.likes;
+          if (state.sort === 'rating-desc') return b.rating - a.rating || b.sortTime - a.sortTime;
+          if (state.sort === 'rating-asc') return a.rating - b.rating || b.sortTime - a.sortTime;
+          return b.sortTime - a.sortTime;
+        });
+    }
+
+    function getBatchType(student) {
+      if (student.sift === 'sifted') return 'sift';
+      if (Number(student.rating) === 5) return 'star5';
+      if (Number(student.rating) === 4) return 'star4';
+      return null;
+    }
+
+    function getSelectedStudents() {
+      return studentData.filter(item => state.selectedStudents.has(item.id));
+    }
+
+    function getSelectedClasses() {
+      const ids = [...new Set(getSelectedStudents().map(item => item.classId))];
+      return classData.filter(item => ids.includes(item.id));
+    }
+
+    function getLockedType() {
+      const first = getSelectedStudents()[0];
+      return first ? getBatchType(first) : null;
+    }
+
+    function getDisabledReason(student) {
+      if (!(Number(student.rating) > 0)) return '无星级，不可勾选';
+      if (student.feedbackStatus !== 'pending') return '已反馈，不可勾选';
+      if (!getBatchType(student)) return '当前评分暂无批量反馈话术';
+      if (getLockedType() && getBatchType(student) !== getLockedType()) return '已锁定其他评分，仅可勾选同一评分';
+      return '';
+    }
+
+    function currentPageRows() {
+      const filtered = getFilteredStudents();
+      const start = (state.page - 1) * state.pageSize;
+      return filtered.slice(start, start + state.pageSize);
+    }
+
+    function homeworkStatusTag(student) {
+      const labels = {
+        uncommented: '未点评',
+        aiReview: 'AI点评中',
+        aiAudit: 'AI已点评（待审核）',
+        aiReviewed: 'AI已点评（已审核）',
+        aiPassedPending: 'AI 审核通过 · 待抽检',
+        aiPublished: 'AI 审核通过 · 已发布',
+        manual: 'AI 审核不通过 · 待人工',
+        manualPassed: 'AI 审核不通过 · 人工通过'
+      };
+      return labels[student.commentState]
+        ? `<span class="el-tag el-tag--warning el-tag--small">${labels[student.commentState]}</span>`
+        : '';
+    }
+
+    function feedbackStatusTag(student) {
+      if (!(Number(student.rating) > 0)) return '';
+      if (student.feedbackStatus === 'feedback') return '<span class="el-tag el-tag--small" style="color:#409EFF;border-color:#409EFF;background:#ecf5ff;">已反馈</span>';
+      if (student.feedbackStatus === 'pending') return '<span class="el-tag el-tag--warning el-tag--small">待反馈</span>';
+      return '';
+    }
+
+    function renderStars(rating) {
+      return Array.from({ length: 5 }, (_, index) => `<span class="${index < rating ? '' : 'is-empty'}">★</span>`).join('');
+    }
+
+    function renderStudents() {
+      const filtered = getFilteredStudents();
+      const maxPage = Math.max(1, Math.ceil(filtered.length / state.pageSize));
+      if (state.page > maxPage) state.page = maxPage;
+      const rows = currentPageRows();
+      const classNameById = Object.fromEntries(classData.map(item => [item.id, item.name]));
+
+      $('#studentRows').innerHTML = rows.map(student => {
+        const reason = getDisabledReason(student);
+        const selected = state.selectedStudents.has(student.id);
+        const tone = student.classId === 'B' ? 'tone-2' : student.classId === 'C' ? 'tone-3' : '';
+        const modeLabel = student.mode === 'legacy' ? 'AI批改（旧版）' : student.mode === 'ai2' ? 'AI批改2.0' : '';
+        return `
+          <div class="work-item" data-student-id="${student.id}">
+            <div class="comment-item ${student.sift === 'sifted' ? 'is-featured' : ''}">
+              <div class="comment-content ${state.crossMode ? 'is-batch' : ''}">
+                <span class="batch-row-check" title="${reason}" ${state.crossMode ? '' : 'hidden'}>
+                  <span class="el-checkbox">
+                    <button class="demo-checkbox ${selected ? 'is-checked' : ''}" data-row-check type="button" aria-label="选择${student.name}" ${reason ? 'disabled' : ''}><span class="el-checkbox__inner"></span></button>
+                  </span>
+                </span>
+                <div class="comment-user-info-content">
+                  <div class="head-icon ${tone}">${student.name.slice(0, 1)}</div>
+                  <div class="user-info">
+                    <div class="comment-title">
+                      <div class="user-name">${student.name}</div>
+                      <div class="complete-num">
+                        <span>学生ID：${3200100 + Number(student.id)}</span>
+                        <span>（手机号：${student.phone || `138****${String(1000 + Number(student.id)).slice(-4)}`}）</span>
+                        ${student.rank ? `<span class="commit-sn">第${student.rank}名提交</span>` : ''}
+                      </div>
+                      ${student.studentType === 'new' ? '<span class="el-tag el-tag--warning el-tag--small">新生</span>' : '<span class="el-tag el-tag--warning el-tag--small">老生</span>'}
+                      <span class="el-tag el-tag--warning el-tag--small">续费意向${student.renewalIntent}</span>
+                      <span class="el-tag el-tag--warning el-tag--small">${student.renewed === 'yes' ? '已续费' : '未续费'}</span>
+                      ${modeLabel ? `<span class="el-tag el-tag--info el-tag--small">${modeLabel}</span>` : ''}
+                      <span class="el-tag el-tag--info el-tag--small">${classNameById[student.classId]}</span>
+                      ${homeworkStatusTag(student)}
+                      ${feedbackStatusTag(student)}
+                    </div>
+                    <div class="score-content">
+                      <div class="score-stars">${renderStars(student.rating)}</div>
+                      <div class="essence-state">
+                        <label class="${student.sift === 'sifted' ? 'is-selected' : ''}"><span class="radio-dot"></span>精选</label>
+                        <label class="${student.sift === 'pending' ? 'is-selected' : ''}"><span class="radio-dot"></span>待精选</label>
+                        <label class="${student.sift === 'unsifted' ? 'is-selected' : ''}"><span class="radio-dot"></span>未精选</label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="wrok-content">
+                  <div class="comment-text">${escapeHtml(student.quote)}</div>
+                  <div class="comment-text">${escapeHtml(student.comment)}</div>
+                </div>
+                <div class="comment-status">
+                  <div class="create-time">
+                    <span>创建于 ${student.time}</span><span class="praise-img">♥</span><span class="praise-num">${student.likes}</span>
+                  </div>
+                  <div class="praise-size">
+                    <span class="remark-btn ${state.crossMode ? 'is-disabled' : ''}" title="${state.crossMode ? '请先退出批量反馈' : ''}"><i class="el-icon-caret-bottom"></i><span>查看AI点评</span></span>
+                    <span class="remark-btn ${state.crossMode ? 'is-disabled' : ''}" title="${state.crossMode ? '请先退出批量反馈' : ''}"><i class="el-icon-edit"></i><span>${student.rating ? '修改点评' : '点评'}</span></span>
+                    <span class="remark-btn ${state.crossMode ? 'is-disabled' : ''}" title="${state.crossMode ? '请先退出批量反馈' : ''}"><i class="el-icon-delete"></i><span>删除练习</span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      $('#emptyState').hidden = rows.length > 0;
+      if (!rows.length) {
+        const hasAvailableClass = getCoveredClasses().length > 0;
+        const noSelectedClass = state.crossMode && state.selectedClasses.size === 0;
+        $('#emptyTitle').textContent = noSelectedClass ? '请选择班级' : hasAvailableClass ? '暂时无人提交练习' : '所选班级暂时无法参与反馈';
+        $('#emptyDescription').textContent = noSelectedClass
+          ? '至少选择一个班级后查看作业'
+          : hasAvailableClass
+            ? '请切换课节或调整筛选条件后重试'
+            : '请检查未排课、无权限或加载失败的班级后重试';
+      }
+      $('#totalCount').textContent = String(filtered.length);
+      renderPagination(filtered.length, maxPage);
+      syncBatchBar();
+    }
+
+    function renderPagination(total, maxPage) {
+      const pages = Array.from({ length: maxPage }, (_, index) => index + 1);
+      $('#pagination').innerHTML = `
+        <div class="el-select"><div class="el-input el-input--mini"><input class="el-input__inner" value="10条/页" readonly></div></div>
+        <span>共 ${total} 条</span>
+        <button class="page-btn" data-page="${state.page - 1}" ${state.page === 1 ? 'disabled' : ''} type="button">‹</button>
+        ${pages.map(page => `<button class="page-btn ${page === state.page ? 'is-active' : ''}" data-page="${page}" type="button">${page}</button>`).join('')}
+        <button class="page-btn" data-page="${state.page + 1}" ${state.page === maxPage ? 'disabled' : ''} type="button">›</button>
+      `;
+      document.querySelectorAll('#pagination [data-page]').forEach(button => {
+        button.addEventListener('click', () => {
+          const page = Number(button.dataset.page);
+          if (page < 1 || page > maxPage || page === state.page) return;
+          state.page = page;
+          state.selectedStudents.clear();
+          renderStudents();
+        });
+      });
+    }
+
+    function candidateRows() {
+      return currentPageRows().filter(item => !getDisabledReason(item));
+    }
+
+    function syncBatchBar() {
+      $('#batchIdle').hidden = state.crossMode;
+      $('#batchActive').hidden = !state.crossMode;
+      $('#batchActionIdle').hidden = state.crossMode;
+      $('#batchActionActive').hidden = !state.crossMode;
+      if (!state.crossMode) return;
+      const rows = candidateRows();
+      const selectedRows = rows.filter(item => state.selectedStudents.has(item.id));
+      const allSelected = rows.length > 0 && selectedRows.length === rows.length;
+      const partial = selectedRows.length > 0 && !allSelected;
+      const locked = getLockedType();
+      const typeLabel = locked === 'sift' ? '精选' : locked === 'star5' ? '5星' : locked === 'star4' ? '4星' : '';
+      $('#selectedCount').textContent = String(state.selectedStudents.size);
+      $('#openFeedbackButton').textContent = `批量反馈 (${state.selectedStudents.size})`;
+      $('#openFeedbackButton').disabled = state.selectedStudents.size === 0;
+      $('#selectAllCheck').classList.toggle('is-checked', allSelected);
+      $('#selectAllCheck').classList.toggle('is-partial', partial);
+      $('#batchHint').textContent = locked ? `已锁定${typeLabel}点评，仅可勾选同一评分` : '';
+    }
+
+    function applyFilters() {
+      state.page = 1;
+      state.selectedStudents.clear();
+      renderFilters();
+      renderStudents();
+    }
+
+    function toggleStudent(student) {
+      const reason = getDisabledReason(student);
+      if (reason) {
+        showMessage(reason, 'warning');
+        return;
+      }
+      if (state.selectedStudents.has(student.id)) state.selectedStudents.delete(student.id);
+      else state.selectedStudents.add(student.id);
+      renderStudents();
+    }
+
+    function selectAll() {
+      const candidates = currentPageRows().filter(item =>
+        Number(item.rating) > 0 &&
+        item.feedbackStatus === 'pending' &&
+        getBatchType(item)
+      );
+      if (!candidates.length) {
+        showMessage('当前页没有可批量反馈的作业', 'warning');
+        return;
+      }
+      const types = new Set(candidates.map(getBatchType));
+      const targetType = getLockedType() || (types.size === 1 ? [...types][0] : null);
+      if (!targetType) {
+        showMessage('列表包含多个评分的作业，批量反馈仅支持同一评分，请先筛选评分', 'warning');
+        return;
+      }
+      const ids = candidates.filter(item => getBatchType(item) === targetType).map(item => item.id);
+      const allSelected = ids.length && ids.every(id => state.selectedStudents.has(id));
+      ids.forEach(id => allSelected ? state.selectedStudents.delete(id) : state.selectedStudents.add(id));
+      renderStudents();
+    }
+
+    function setCrossMode(enabled) {
+      if (enabled && state.selectedClasses.size === 0) {
+        showMessage('请至少选择一个班级', 'warning');
+        return;
+      }
+      state.crossMode = enabled;
+      state.selectedStudents.clear();
+      state.page = 1;
+      $('#coverageSummary').hidden = !enabled;
+      renderCoverage();
+      renderStudents();
+    }
+
+    function showMessage(text, type = 'info') {
+      const message = $('#message');
+      $('#messageText').textContent = text;
+      message.classList.remove('is-warning', 'is-success');
+      if (type === 'warning') message.classList.add('is-warning');
+      if (type === 'success') message.classList.add('is-success');
+      message.classList.add('is-visible');
+      clearTimeout(messageTimer);
+      messageTimer = setTimeout(() => message.classList.remove('is-visible'), 2800);
+    }
+
+    function getDuplicateGroups(selected) {
+      const groups = new Map();
+      selected.forEach(student => {
+        const identity = student.studentKey || `${student.name}|${student.phone || student.id}`;
+        if (!groups.has(identity)) groups.set(identity, []);
+        groups.get(identity).push(student);
+      });
+      return [...groups.values()].filter(group => group.length > 1);
+    }
+
+    function closeFeedbackDialog() {
+      $('#feedbackDialog').classList.remove('is-open');
+      $('#feedbackDialog').setAttribute('aria-hidden', 'true');
+    }
+
+    function openFeedbackDialog() {
+      const selected = getSelectedStudents();
+      if (!selected.length) return;
+      const duplicateGroups = getDuplicateGroups(selected);
+      if (duplicateGroups.length) {
+        showMessage('存在同一学员跨班重复，请先在列表中移除其中一个班的作业', 'warning');
+        return;
+      }
+
+      const skipped = selected.filter(item => item.noWecom);
+      const locked = getLockedType();
+      const defaultText = locked === 'star4'
+        ? '宝贝家长，今天的练习我们认真看过了。孩子能抓住人物动作来表达心情，表达已经比较清楚。建议下一次再补充人物说话时的神态，会让画面更丰富。练习反馈已经整理好，点开链接就能查看～'
+        : '宝贝家长，今天的练习我们认真看过了。孩子能把人物动作写进具体场景，画面感很自然。建议接下来继续留意人物说话时的动作细节，会让故事更完整。已经整理好本次练习的反馈，点开链接就能查看～';
+
+      $('#dialogSummary').textContent = `将对已选 ${selected.length} 位学生的点评进行反馈，反馈后作业状态会更新为「已反馈」。`;
+      $('#feedbackText').value = defaultText;
+      $('#feedbackPreview').textContent = `【家长称呼】${defaultText}【反馈链接】`;
+      $('#wecomWarning').hidden = skipped.length === 0;
+      $('#wecomWarning').textContent = skipped.length
+        ? `以下学员无家长企微，将不会发送：${skipped.map(item => `${classData.find(cls => cls.id === item.classId).name} · ${item.name}`).join('、')}`
+        : '';
+      $('#confirmFeedbackButton').textContent = `确认反馈 (${selected.length})`;
+      $('#confirmFeedbackButton').disabled = false;
+      $('#cancelDialogButton').textContent = '取消';
+      $('#feedbackDialog').classList.add('is-open');
+      $('#feedbackDialog').setAttribute('aria-hidden', 'false');
+      setTimeout(() => $('#feedbackText').focus(), 60);
+    }
+
+    function confirmFeedback() {
+      const selected = getSelectedStudents();
+      if (!selected.length) return;
+      if (getDuplicateGroups(selected).length) {
+        showMessage('请先处理跨班重复学员', 'warning');
+        return;
+      }
+      const skipped = selected.filter(item => item.noWecom).length;
+      const success = selected.length - skipped;
+      selected.forEach(item => {
+        if (!item.noWecom) item.feedbackStatus = 'feedback';
+      });
+      closeFeedbackDialog();
+      state.selectedStudents.clear();
+      setCrossMode(false);
+      renderCoverage();
+      renderStudents();
+      showMessage(`已反馈 ${success} 条作业点评${skipped ? `，跳过 ${skipped} 条` : ''}`, 'success');
+    }
+
+    $('#classTrigger').addEventListener('click', event => {
+      event.stopPropagation();
+      $('#classMenu').hidden = !$('#classMenu').hidden;
+      $('#classTrigger').setAttribute('aria-expanded', String(!$('#classMenu').hidden));
+    });
+    $('#classMenu').addEventListener('click', event => {
+      event.stopPropagation();
+      const option = event.target.closest('[data-class-id]');
+      if (!option) return;
+      const id = option.dataset.classId;
+      if (state.crossMode) {
+        if (state.selectedClasses.has(id)) {
+          state.selectedClasses.delete(id);
+        } else {
+          if (state.selectedClasses.size >= 5) {
+            showMessage('最多选择 5 个班级', 'warning');
+            return;
+          }
+          state.selectedClasses.add(id);
+        }
+      } else {
+        state.activeClassId = id;
+      }
+      state.selectedStudents.clear();
+      state.page = 1;
+      renderCoverage();
+      renderStudents();
+    });
+    $('#classStatusPanel').addEventListener('click', event => {
+      const retryButton = event.target.closest('[data-retry-class]');
+      if (!retryButton) return;
+      const classItem = classData.find(item => item.id === retryButton.dataset.retryClass);
+      if (!classItem) return;
+      classItem.loadFailed = false;
+      renderCoverage();
+      renderStudents();
+      showMessage(`${classItem.name}已重新加载`, 'success');
+    });
+    $('#enterBatchButton').addEventListener('click', () => setCrossMode(true));
+    $('#studentRows').addEventListener('click', event => {
+      const row = event.target.closest('[data-student-id]');
+      if (!row) return;
+      if (event.target.closest('.remark-btn')) {
+        showMessage(state.crossMode ? '请先退出批量反馈，再操作单条作业' : 'Demo 中暂不展开该操作');
+        return;
+      }
+      const student = studentData.find(item => item.id === row.dataset.studentId);
+      if (student) toggleStudent(student);
+    });
+    $('#selectAllButton').addEventListener('click', selectAll);
+    $('#openFeedbackButton').addEventListener('click', openFeedbackDialog);
+    $('#cancelBatchButton').addEventListener('click', () => {
+      state.selectedStudents.clear();
+      setCrossMode(false);
+    });
+    $('#closeDialogButton').addEventListener('click', closeFeedbackDialog);
+    $('#cancelDialogButton').addEventListener('click', closeFeedbackDialog);
+    $('#confirmFeedbackButton').addEventListener('click', confirmFeedback);
+    $('#feedbackText').addEventListener('input', event => {
+      $('#feedbackPreview').textContent = `【家长称呼】${event.target.value}【反馈链接】`;
+      $('#confirmFeedbackButton').disabled = !event.target.value.trim();
+    });
+    $('#headerFilterTrigger').addEventListener('click', event => {
+      event.stopPropagation();
+      closeFilterPopover();
+      $('#headerFilterPopover').hidden = !$('#headerFilterPopover').hidden;
+    });
+
+    $('#sortTrigger').addEventListener('click', event => {
+      event.stopPropagation();
+      state.activeFilter = 'sort';
+      $('#filterPopoverTitle').hidden = true;
+      renderFilterPopover();
+      $('#filterPopover').hidden = false;
+      const rect = event.currentTarget.getBoundingClientRect();
+      $('#filterPopover').style.left = `${window.innerWidth - 232}px`;
+      $('#filterPopover').style.top = `${rect.bottom + 6}px`;
+    });
+
+    document.addEventListener('click', event => {
+      $('#classMenu').hidden = true;
+      $('#classTrigger').setAttribute('aria-expanded', 'false');
+      $('#headerFilterPopover').hidden = true;
+      if (!event.target.closest('#filterPopover') && !event.target.closest('[data-filter-key]')) closeFilterPopover();
+    });
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape') {
+        closeFilterPopover();
+        closeFeedbackDialog();
+        $('#classMenu').hidden = true;
+        $('#headerFilterPopover').hidden = true;
+      }
+    });
+    window.addEventListener('resize', closeFilterPopover);
+
+    renderHeaderFilter();
+    renderCoverage();
+    renderFilters();
+    renderStudents();
+  </script>
+</body>
+</html>
