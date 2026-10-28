@@ -219,6 +219,32 @@
     .demo-select .el-icon-arrow-down { position: absolute; right: 9px; color: #c0c4cc; font-size: 12px; }
     .class-select-trigger { min-width: 210px; }
     .lesson-select-trigger { min-width: 230px; }
+    .lesson-menu { width: 320px; }
+    .lesson-option {
+      width: 100%;
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 6px 12px;
+      color: #606266;
+      font-size: 13px;
+      text-align: left;
+    }
+    .lesson-option:hover { background: #f5f7fa; }
+    .lesson-option.is-selected { color: var(--brand); font-weight: 500; }
+    .lesson-option .el-icon-check { color: transparent; font-size: 12px; }
+    .lesson-option.is-selected .el-icon-check { color: var(--brand); }
+    .class-menu-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-top: 1px solid #f0f0f0;
+      background: #fafafa;
+    }
+    .class-menu-actions .el-button--mini { flex: 1; }
     .class-tags { display: flex; gap: 4px; min-width: 0; overflow: hidden; }
     .class-tags .el-tag { flex: 0 0 auto; }
     .chapter-actions { flex-shrink: 0; display: flex; align-items: center; gap: 10px; }
@@ -255,38 +281,10 @@
     .class-option.is-selected { color: var(--brand); }
     .class-option.is-limit { color: #9ca2ab; background: #fafafa; }
     .class-option.is-limit .demo-checkbox { opacity: .55; }
+    .class-option.is-unavailable { color: #b8bcc4; background: #fafafa; cursor: not-allowed; }
+    .class-option.is-unavailable:hover { background: #fafafa; }
+    .class-option.is-unavailable .demo-checkbox { opacity: .45; }
     .class-option-name { display: block; font-size: 13px; }
-    .class-status-panel { margin: 0 20px 10px 0; border: 1px solid #f2dfbb; border-radius: 4px; background: #fffaf0; }
-    .class-status-item { display: flex; align-items: center; gap: 8px; min-height: 34px; padding: 7px 10px; color: #8e641e; font-size: 12px; border-bottom: 1px solid #f6e8cd; }
-    .class-status-item:last-child { border-bottom: 0; }
-    .class-status-item.is-error { color: #c45656; background: #fff7f7; border-bottom-color: #f7dddd; }
-    .class-status-action { margin-left: auto; color: #1989fa; font-size: 12px; }
-
-    .coverage-summary {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin: 0 20px 10px 0;
-      padding: 9px 12px;
-      border: 1px solid #ffe0d6;
-      border-radius: 4px;
-      color: #606266;
-      background: #fff8f5;
-      font-size: 12px;
-    }
-    .coverage-summary__main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .coverage-summary__label { color: #ff5f2e; font-weight: 600; }
-    .coverage-classes { display: flex; flex-wrap: wrap; gap: 6px; }
-    .coverage-class-chip {
-      padding: 2px 7px;
-      border: 1px solid #ffd4c6;
-      border-radius: 3px;
-      color: #8b5948;
-      background: #fff;
-    }
-    .coverage-class-chip.is-missing { color: #b76b12; border-color: #f2dfbb; background: #fffaf0; }
-    .coverage-actions { color: #909399; font-size: 11px; }
-
     .comment-con { margin-top: 10px; }
     .comment-container { border-radius: 2px; background: #fff; }
     .search-section { display: flex; justify-content: space-between; padding: 20px 20px 0; background: #fff; }
@@ -486,6 +484,42 @@
     .demo-message.is-warning { color: #8e641e; border-color: #f2dfbb; background: #fdf6ec; }
     .demo-message.is-success { color: #529b2e; border-color: #d8efd2; background: #f0f9eb; }
 
+    body.focus-mode .layout-header-content,
+    body.focus-mode .sc_menu,
+    body.focus-mode .header-row {
+      display: none;
+    }
+    body.focus-mode .router-view-content {
+      padding-top: 20px;
+      padding-left: 0;
+    }
+    body.focus-mode .router-view-container {
+      max-width: 1360px;
+      margin: 0 auto;
+      padding-right: 20px;
+      padding-left: 20px;
+    }
+    body.focus-mode .chapter-actions {
+      display: none;
+    }
+    body.focus-mode .chapter-filter-area {
+      display: flex;
+    }
+    body.focus-mode .chapter-card {
+      padding-top: 12px;
+    }
+    body.focus-mode .praise-size {
+      display: none;
+    }
+    body.focus-mode #batchIdle,
+    body.focus-mode #batchActionIdle {
+      display: none;
+    }
+    body.focus-mode #batchActive,
+    body.focus-mode #batchActionActive {
+      display: flex;
+    }
+
     @media (max-width: 1320px) {
       .filter-form .el-form-item { margin-right: 18px; }
       .filter-input-wrap { width: 140px; }
@@ -577,14 +611,24 @@
                       <div class="class-menu" id="classMenu" hidden>
                         <div class="class-menu-head" id="classMenuHint"></div>
                         <div id="classOptions"></div>
+                        <div class="class-menu-actions" id="classMenuActions" hidden>
+                          <button class="el-button el-button--default el-button--mini" id="selectAllClassesButton" type="button">全选</button>
+                          <button class="el-button el-button--default el-button--mini" id="clearClassesButton" type="button">清空</button>
+                        </div>
                       </div>
                     </div>
                   </div>
                   <div class="chapter-field">
                     <span>小节名称</span>
-                    <button class="demo-select lesson-select-trigger" type="button">
-                      <span>第 8 讲 · 把人物写活：动作与语言</span><i class="el-icon-arrow-down"></i>
-                    </button>
+                    <div style="position:relative;">
+                      <button class="demo-select lesson-select-trigger" id="lessonTrigger" type="button" aria-expanded="false">
+                        <span id="lessonValue">第 8 讲 · 把人物写活：动作与语言</span><i class="el-icon-arrow-down"></i>
+                      </button>
+                      <div class="class-menu lesson-menu" id="lessonMenu" hidden>
+                        <div class="class-menu-head">选择小节</div>
+                        <div id="lessonOptions"></div>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div class="chapter-actions">
@@ -593,14 +637,6 @@
                   <button class="text-link" type="button">展开点评统计⌄</button>
                 </div>
               </div>
-              <div class="coverage-summary" id="coverageSummary">
-                <div class="coverage-summary__main">
-                  <span class="coverage-summary__label">本次覆盖</span>
-                  <span class="coverage-classes" id="coverageClasses"></span>
-                </div>
-                <span class="coverage-actions" id="coverageMeta"></span>
-              </div>
-              <div class="class-status-panel" id="classStatusPanel" hidden></div>
             </section>
 
             <section class="comment-con">
@@ -644,7 +680,7 @@
                   <div class="no-answers" id="emptyState" hidden>
                     <div>
                       <strong id="emptyTitle" style="display:block;margin-bottom:8px;color:#606266;font-size:14px;">暂时无人提交练习</strong>
-                      <span id="emptyDescription">请切换课节或调整筛选条件后重试</span>
+                      <span id="emptyDescription">请调整筛选条件后重试</span>
                     </div>
                   </div>
                 </div>
@@ -702,6 +738,18 @@
       { id: 'G', name: '阅读 G 班', hasLesson: true, hasPermission: true, loadFailed: false, truncated: true, pendingTotal: 326 }
     ];
 
+    const currentTeacher = {
+      name: '林老师',
+      classIds: ['A', 'B', 'C', 'D', 'E', 'G']
+    };
+
+    const lessonData = [
+      { id: 'L8', name: '第 8 讲 · 把人物写活：动作与语言', classAvailability: { A: true, B: true, C: true, D: false, E: true, G: true } },
+      { id: 'L7', name: '第 7 讲 · 环境描写：让场景说话', classAvailability: { A: true, B: true, C: true, D: true, E: false, G: true } },
+      { id: 'L6', name: '第 6 讲 · 对话推进：让人物开口', classAvailability: { A: true, B: false, C: true, D: true, E: true, G: true } },
+      { id: 'L5', name: '第 5 讲 · 细节放大：写清楚一件事', classAvailability: { A: true, B: true, C: true, D: true, E: true, G: true } }
+    ];
+
     const studentData = [
       { id: '1', name: '林小满', classId: 'A', studentKey: 'STUDENT-LXM', phone: '138****1001', time: '2026-10-24 10:26', sortTime: 1026, rank: 2, quote: '“雨点落在窗台上，像一支停不下来的小鼓队，一下一下敲着安静的下午。”', comment: '老师点评：观察细致，动作描写已有画面感。', rating: 5, sift: 'unsifted', commentState: 'aiPassedPending', feedbackStatus: 'pending', teacher: '林老师', mode: 'ai2', reply: 'no', rectify: 'no', sendStatus: 'not-sent', viewStatus: 'not-viewed', studentType: 'new', renewalIntent: 'B', renewed: 'no', tempTransfer: 'no', completion: 'complete', likes: 8, noWecom: false },
       { id: '15', name: '林小满', classId: 'B', studentKey: 'STUDENT-LXM', phone: '138****1001', time: '2026-10-24 10:31', sortTime: 1031, rank: 1, quote: '“雨点落在窗台上，像一支停不下来的小鼓队，一下一下敲着安静的下午。”', comment: '老师点评：同一学员跨班出现的演示数据。', rating: 5, sift: 'unsifted', commentState: 'aiPassedPending', feedbackStatus: 'pending', teacher: '周老师', mode: 'ai2', reply: 'no', rectify: 'no', sendStatus: 'not-sent', viewStatus: 'not-viewed', studentType: 'new', renewalIntent: 'B', renewed: 'no', tempTransfer: 'yes', completion: 'complete', likes: 0, noWecom: false },
@@ -745,6 +793,7 @@
       crossMode: false,
       selectedClasses: new Set(['A', 'B', 'C']),
       activeClassId: 'A',
+      selectedLessonId: 'L8',
       selectedStudents: new Set(),
       page: 1,
       pageSize: 8,
@@ -754,6 +803,7 @@
     };
 
     const $ = selector => document.querySelector(selector);
+    const focusMode = new URLSearchParams(window.location.search).get('focus') === '1';
     let messageTimer = null;
 
     function escapeHtml(value) {
@@ -776,8 +826,34 @@
       return JSON.stringify(state.filters[def.key]) === JSON.stringify(def.defaultValue);
     }
 
+    function getSelectedLesson() {
+      return lessonData.find(item => item.id === state.selectedLessonId) || lessonData[0];
+    }
+
+    function getClassLessonAvailable(classId) {
+      const lesson = getSelectedLesson();
+      return !lesson || lesson.classAvailability[classId] !== false;
+    }
+
+    function getSelectableClasses() {
+      if (!focusMode) return classData;
+      return classData.filter(item => currentTeacher.classIds.includes(item.id));
+    }
+
+    function isClassSelectable(item) {
+      return Boolean(item && getClassLessonAvailable(item.id) && item.hasPermission !== false && !item.loadFailed && !item.truncated);
+    }
+
     function isClassAvailable(item) {
-      return Boolean(item && item.hasLesson && item.hasPermission !== false && !item.loadFailed);
+      return isClassSelectable(item);
+    }
+
+    function normalizeSelectedClasses() {
+      if (!state.crossMode) return;
+      const selectableIds = new Set(getSelectableClasses().filter(isClassSelectable).map(item => item.id));
+      [...state.selectedClasses].forEach(id => {
+        if (!selectableIds.has(id)) state.selectedClasses.delete(id);
+      });
     }
 
     function getCoveredClasses() {
@@ -785,11 +861,6 @@
         return classData.filter(item => item.id === state.activeClassId && isClassAvailable(item));
       }
       return classData.filter(item => state.selectedClasses.has(item.id) && isClassAvailable(item));
-    }
-
-    function getMissingClasses() {
-      if (!state.crossMode) return [];
-      return classData.filter(item => state.selectedClasses.has(item.id) && !item.hasLesson);
     }
 
     function getPendingCount(classId) {
@@ -805,11 +876,14 @@
     }
 
     function renderClassMenu() {
-      $('#classOptions').innerHTML = classData.map(item => {
+      const selectableClasses = getSelectableClasses();
+      const maxClasses = focusMode ? Infinity : 5;
+      $('#classOptions').innerHTML = selectableClasses.map(item => {
         const selected = state.crossMode ? state.selectedClasses.has(item.id) : state.activeClassId === item.id;
-        const limited = state.crossMode && !selected && state.selectedClasses.size >= 5;
+        const unavailable = state.crossMode && !isClassSelectable(item);
+        const limited = state.crossMode && !selected && state.selectedClasses.size >= maxClasses;
         return `
-          <button class="class-option ${selected ? 'is-selected' : ''} ${limited ? 'is-limit' : ''}" type="button" data-class-id="${item.id}" aria-disabled="${limited}" title="${limited ? '最多选择 5 个班级' : ''}">
+          <button class="class-option ${selected ? 'is-selected' : ''} ${limited ? 'is-limit' : ''} ${unavailable ? 'is-unavailable' : ''}" type="button" data-class-id="${item.id}" aria-disabled="${limited || unavailable}" ${unavailable ? 'disabled' : ''} title="${unavailable ? '当前班级暂不可选择' : limited ? '最多选择 5 个班级' : ''}">
             <span class="el-checkbox">
               <span class="demo-checkbox ${selected ? 'is-checked' : ''}"><span class="el-checkbox__inner"></span></span>
             </span>
@@ -818,22 +892,23 @@
         `;
       }).join('');
       $('#classMenuHint').textContent = state.crossMode
-        ? `已选 ${state.selectedClasses.size} 个班`
+        ? `已选 ${state.selectedClasses.size} 个班，可单选或多选`
         : '选择当前查看班级';
     }
 
-    function renderCoverage() {
-      $('#coverageSummary').hidden = !state.crossMode || state.selectedClasses.size < 2;
-      const covered = getCoveredClasses();
-      const total = covered.reduce((sum, item) => sum + getPendingCount(item.id), 0);
-      const selected = state.crossMode
-        ? classData.filter(item => state.selectedClasses.has(item.id))
-        : classData.filter(item => item.id === state.activeClassId);
-      $('#coverageClasses').innerHTML = selected.map(item => `
-        <span class="coverage-class-chip ${isClassAvailable(item) ? '' : 'is-missing'}">${item.name}${isClassAvailable(item) ? '' : ` · ${item.hasPermission === false ? '无权访问' : item.hasLesson ? (item.loadFailed ? '加载失败' : '已排除') : '缺少课节'}`}</span>
+    function renderLessonMenu() {
+      $('#lessonOptions').innerHTML = lessonData.map(item => `
+        <button class="lesson-option ${state.selectedLessonId === item.id ? 'is-selected' : ''}" type="button" data-lesson-id="${item.id}">
+          <span>${item.name}</span><i class="el-icon-check"></i>
+        </button>
       `).join('');
-      $('#coverageMeta').textContent = `${covered.length} 个班参与 · ${total} 条待反馈作业`;
+      $('#lessonValue').textContent = getSelectedLesson().name;
+    }
 
+    function renderCoverage() {
+      const selected = state.crossMode
+        ? getSelectableClasses().filter(item => state.selectedClasses.has(item.id))
+        : getSelectableClasses().filter(item => item.id === state.activeClassId);
       const classValue = $('#classValue');
       if (!selected.length) {
         classValue.innerHTML = '<span class="el-tag el-tag--small">请选择班级</span>';
@@ -841,29 +916,7 @@
         classValue.innerHTML = selected.slice(0, 2).map(item => `<span class="el-tag el-tag--small">${item.name}</span>`).join('') + (selected.length > 2 ? `<span class="el-tag el-tag--small">+${selected.length - 2}</span>` : '');
       }
       renderClassMenu();
-      renderClassStatusPanel(selected);
-    }
-
-    function renderClassStatusPanel(selected) {
-      const messages = [];
-      selected.forEach(item => {
-        if (item.hasPermission === false) {
-          messages.push({ text: `${item.name}无权访问，已从本次反馈中排除。`, error: true });
-        } else if (!item.hasLesson) {
-          messages.push({ text: `${item.name}没有当前课节，已从本次反馈中排除。`, error: true });
-        } else if (item.loadFailed) {
-          messages.push({ text: `${item.name}作业加载失败，当前列表不完整。`, error: true, retryClass: item.id });
-        } else if (item.truncated) {
-          messages.push({ text: `${item.name}数据较多，仅加载前 300 条，请继续筛选或缩小范围。`, error: false });
-        }
-      });
-      $('#classStatusPanel').hidden = messages.length === 0;
-      $('#classStatusPanel').innerHTML = messages.map(message => `
-        <div class="class-status-item ${message.error ? 'is-error' : ''}">
-          <span>${message.text}</span>
-          ${message.retryClass ? `<button class="class-status-action" type="button" data-retry-class="${message.retryClass}">重试</button>` : ''}
-        </div>
-      `).join('');
+      renderLessonMenu();
     }
 
     function renderFilters() {
@@ -1160,8 +1213,8 @@
         $('#emptyDescription').textContent = noSelectedClass
           ? '至少选择一个班级后查看作业'
           : hasAvailableClass
-            ? '请切换课节或调整筛选条件后重试'
-            : '请检查未排课、无权限或加载失败的班级后重试';
+            ? '请调整筛选条件后重试'
+            : '请调整班级或小节后重试';
       }
       $('#totalCount').textContent = String(filtered.length);
       renderPagination(filtered.length, maxPage);
@@ -1260,7 +1313,6 @@
       state.crossMode = enabled;
       state.selectedStudents.clear();
       state.page = 1;
-      $('#coverageSummary').hidden = !enabled;
       renderCoverage();
       renderStudents();
     }
@@ -1335,7 +1387,7 @@
       });
       closeFeedbackDialog();
       state.selectedStudents.clear();
-      setCrossMode(false);
+      if (!focusMode) setCrossMode(false);
       renderCoverage();
       renderStudents();
       showMessage(`已反馈 ${success} 条作业点评${skipped ? `，跳过 ${skipped} 条` : ''}`, 'success');
@@ -1343,19 +1395,38 @@
 
     $('#classTrigger').addEventListener('click', event => {
       event.stopPropagation();
+      $('#lessonMenu').hidden = true;
+      $('#lessonTrigger').setAttribute('aria-expanded', 'false');
       $('#classMenu').hidden = !$('#classMenu').hidden;
       $('#classTrigger').setAttribute('aria-expanded', String(!$('#classMenu').hidden));
     });
     $('#classMenu').addEventListener('click', event => {
       event.stopPropagation();
+      if (event.target.closest('#selectAllClassesButton')) {
+        getSelectableClasses().filter(isClassSelectable).forEach(item => state.selectedClasses.add(item.id));
+        state.selectedStudents.clear();
+        state.page = 1;
+        renderCoverage();
+        renderStudents();
+        return;
+      }
+      if (event.target.closest('#clearClassesButton')) {
+        state.selectedClasses.clear();
+        state.selectedStudents.clear();
+        state.page = 1;
+        renderCoverage();
+        renderStudents();
+        return;
+      }
       const option = event.target.closest('[data-class-id]');
       if (!option) return;
+      if (option.disabled || option.getAttribute('aria-disabled') === 'true') return;
       const id = option.dataset.classId;
       if (state.crossMode) {
         if (state.selectedClasses.has(id)) {
           state.selectedClasses.delete(id);
         } else {
-          if (state.selectedClasses.size >= 5) {
+          if (!focusMode && state.selectedClasses.size >= 5) {
             showMessage('最多选择 5 个班级', 'warning');
             return;
           }
@@ -1369,15 +1440,25 @@
       renderCoverage();
       renderStudents();
     });
-    $('#classStatusPanel').addEventListener('click', event => {
-      const retryButton = event.target.closest('[data-retry-class]');
-      if (!retryButton) return;
-      const classItem = classData.find(item => item.id === retryButton.dataset.retryClass);
-      if (!classItem) return;
-      classItem.loadFailed = false;
+    $('#lessonTrigger').addEventListener('click', event => {
+      event.stopPropagation();
+      $('#classMenu').hidden = true;
+      $('#classTrigger').setAttribute('aria-expanded', 'false');
+      $('#lessonMenu').hidden = !$('#lessonMenu').hidden;
+      $('#lessonTrigger').setAttribute('aria-expanded', String(!$('#lessonMenu').hidden));
+    });
+    $('#lessonMenu').addEventListener('click', event => {
+      event.stopPropagation();
+      const option = event.target.closest('[data-lesson-id]');
+      if (!option) return;
+      state.selectedLessonId = option.dataset.lessonId;
+      normalizeSelectedClasses();
+      state.selectedStudents.clear();
+      state.page = 1;
+      $('#lessonMenu').hidden = true;
+      $('#lessonTrigger').setAttribute('aria-expanded', 'false');
       renderCoverage();
       renderStudents();
-      showMessage(`${classItem.name}已重新加载`, 'success');
     });
     $('#enterBatchButton').addEventListener('click', () => setCrossMode(true));
     $('#studentRows').addEventListener('click', event => {
@@ -1394,7 +1475,8 @@
     $('#openFeedbackButton').addEventListener('click', openFeedbackDialog);
     $('#cancelBatchButton').addEventListener('click', () => {
       state.selectedStudents.clear();
-      setCrossMode(false);
+      if (!focusMode) setCrossMode(false);
+      renderStudents();
     });
     $('#closeDialogButton').addEventListener('click', closeFeedbackDialog);
     $('#cancelDialogButton').addEventListener('click', closeFeedbackDialog);
@@ -1423,6 +1505,8 @@
     document.addEventListener('click', event => {
       $('#classMenu').hidden = true;
       $('#classTrigger').setAttribute('aria-expanded', 'false');
+      $('#lessonMenu').hidden = true;
+      $('#lessonTrigger').setAttribute('aria-expanded', 'false');
       $('#headerFilterPopover').hidden = true;
       if (!event.target.closest('#filterPopover') && !event.target.closest('[data-filter-key]')) closeFilterPopover();
     });
@@ -1431,10 +1515,24 @@
         closeFilterPopover();
         closeFeedbackDialog();
         $('#classMenu').hidden = true;
+        $('#lessonMenu').hidden = true;
+        $('#classTrigger').setAttribute('aria-expanded', 'false');
+        $('#lessonTrigger').setAttribute('aria-expanded', 'false');
         $('#headerFilterPopover').hidden = true;
       }
     });
     window.addEventListener('resize', closeFilterPopover);
+
+    if (focusMode) {
+      document.body.classList.add('focus-mode');
+      state.crossMode = true;
+      normalizeSelectedClasses();
+      $('#batchIdle').hidden = true;
+      $('#batchActionIdle').hidden = true;
+      $('#batchActive').hidden = false;
+      $('#batchActionActive').hidden = false;
+      $('#classMenuActions').hidden = false;
+    }
 
     renderHeaderFilter();
     renderCoverage();
